@@ -10,10 +10,8 @@
 </head>
 <body>
 
-  <!-- scroll progress bar -->
   <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
 
-  <!-- animated circuit-trace background -->
   <div class="circuit-bg" aria-hidden="true">
     <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
       <path class="trace" d="M0,120 L200,120 L200,260 L480,260 L480,60 L760,60 L760,340 L1200,340" />
@@ -32,9 +30,7 @@
     <div class="nav-inner">
       <a href="#top" class="nav-logo">JP<span class="cursor">_</span></a>
       <div class="nav-links">
-        <a href="#foc-actuator" data-nav="foc-actuator">FOC Actuator</a>
-        <a href="#macro-keypad" data-nav="macro-keypad">Macro Keypad</a>
-        <a href="#chip8" data-nav="chip8">CHIP-8</a>
+        <a href="#projects" data-nav="projects">Projects</a>
         <a href="#skills" data-nav="skills">Skills</a>
         <a href="https://github.com/johnppilli" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
       </div>
@@ -49,9 +45,11 @@
         <span class="reveal" style="--d:1">Pilli</span>
       </h1>
       <p class="hero-sub reveal" style="--d:2">
-        I build things that live at the boundary of hardware and software —
-        firmware from scratch, PCBs from schematic to fab, and the debugging
-        scars to prove it.
+        <!-- Short bio — rewrite this in your own words -->
+        I'm a Computer Engineering student at CSULB who likes building things that don't
+        work the first time — firmware, PCBs, control systems — and figuring out why. This
+        site is a running log of what I've built, what's broken, and what I've learned
+        putting it back together.
       </p>
       <div class="hero-links reveal" style="--d:3">
         <a href="https://github.com/johnppilli" target="_blank" rel="noopener" class="btn btn-primary">View GitHub</a>
@@ -59,7 +57,7 @@
         <a href="mailto:john.pilli01@student.csulb.edu" class="btn">Email me</a>
       </div>
     </div>
-    <a href="#foc-actuator" class="scroll-cue" aria-label="Scroll down">
+    <a href="#projects" class="scroll-cue" aria-label="Scroll down">
       <span></span>
     </a>
   </header>
@@ -67,164 +65,64 @@
   <main>
 
     <!-- ============================================= -->
-    <!-- PROJECT: FOC Actuator -->
+    <!-- PROJECT PREVIEW GRID -->
     <!-- ============================================= -->
-    <section class="project reveal" id="foc-actuator">
-      <div class="project-index">01</div>
-      <div class="project-body">
-        <div class="project-header">
-          <h2>Field-Oriented Control BLDC Actuator</h2>
-          <span class="status status-progress"><span class="pulse-dot"></span>In Progress</span>
-        </div>
-        <p class="project-summary">
-          Building sensored field-oriented control (FOC) firmware from scratch on an STM32 —
-          Clarke/Park transforms, a PI current controller, and encoder/current-sensing peripheral
-          bring-up — working toward closed-loop torque control on a BLDC motor.
-        </p>
-        <div class="tag-row">
-          <span class="tag">STM32</span>
-          <span class="tag">C</span>
-          <span class="tag">Control Theory</span>
-          <span class="tag">I2C / ADC</span>
-        </div>
-
-        <button class="details-toggle" data-target="foc-details">
-          <span class="toggle-label">Show technical details</span>
-          <span class="toggle-icon">＋</span>
-        </button>
-        <ul class="project-details" id="foc-details">
-          <li>Derived and implemented the Clarke, Park, inverse-Park/Clarke transforms and a PI current controller from first principles in C, independently verified against hand-calculated test cases before integration</li>
-          <li>Brought up I2C and internal op-amp/ADC peripherals on an STM32G4 from scratch to read a magnetic encoder and motor phase currents, including encoder offset calibration to align mechanical and electrical reference frames</li>
-          <li>Diagnosed and resolved hardware faults during bring-up — including a torn PCB pad and a driver-IC failure — through systematic continuity testing and circuit-level analysis</li>
-        </ul>
-
-        <a href="https://github.com/johnppilli/foc-actuator" target="_blank" rel="noopener" class="project-link">View code on GitHub →</a>
-
-        <div class="gallery">
-          <!--
-            Add a photo:
-              <div class="gallery-item" data-full="assets/images/YOUR-PHOTO.jpg">
-                <img src="assets/images/YOUR-PHOTO.jpg" alt="describe what's shown">
-                <p class="caption">Short caption / date</p>
-              </div>
-
-            Add a local video:
-              <div class="gallery-item gallery-video">
-                <video controls src="assets/videos/YOUR-VIDEO.mp4"></video>
-                <p class="caption">Short caption / date</p>
-              </div>
-
-            Embed a YouTube video:
-              <div class="gallery-item gallery-video">
-                <iframe src="https://www.youtube.com/embed/VIDEO_ID" allowfullscreen></iframe>
-                <p class="caption">Short caption / date</p>
-              </div>
-          -->
-          <div class="gallery-placeholder">
-            <span>📷 Photos/video coming as the build progresses</span>
-            <small>Drop files into <code>assets/images/</code> or <code>assets/videos/</code></small>
-          </div>
-        </div>
-      </div>
+    <section id="projects" class="projects-intro reveal">
+      <p class="section-eyebrow">// selected work</p>
+      <h2>Projects</h2>
     </section>
 
-    <!-- ============================================= -->
-    <!-- PROJECT: Macro Keypad -->
-    <!-- ============================================= -->
-    <section class="project reveal" id="macro-keypad">
-      <div class="project-index">02</div>
-      <div class="project-body">
-        <div class="project-header">
-          <h2>Custom Mechanical Macro Keypad</h2>
-          <span class="status status-progress"><span class="pulse-dot"></span>Debugging</span>
-        </div>
-        <p class="project-summary">
-          A custom USB macro keypad designed from schematic to fabrication in KiCad — a 3×3 matrix
-          of 9 mechanical key switches, built around an RP2040 microcontroller.
-        </p>
-        <div class="tag-row">
-          <span class="tag">KiCad</span>
-          <span class="tag">RP2040</span>
-          <span class="tag">PCB Design</span>
-          <span class="tag">USB</span>
-        </div>
+    <div class="project-grid">
 
-        <button class="details-toggle" data-target="keypad-details">
-          <span class="toggle-label">Show technical details</span>
-          <span class="toggle-icon">＋</span>
-        </button>
-        <ul class="project-details" id="keypad-details">
-          <li>Designed a custom USB macro keypad from schematic to fabrication in KiCad: a 3x3 matrix of 9 mechanical key switches with a per-key diode on each switch to enable N-key rollover and prevent ghosting during matrix scanning</li>
-          <li>Drew the full schematic around an RP2040 microcontroller with a USB-C connector for power and data, USBLC6 ESD protection on the data lines, and decoupling capacitors on each supply pin</li>
-          <li>Routed a 2-layer PCB layout, defined the board outline (Edge.Cuts), generated Gerber and drill files, and ordered fabricated boards through JLCPCB</li>
-          <li>Verified the design with electrical rules check (ERC) and design rules check (DRC) in KiCad, resolving unconnected nets and clearance violations, and checked each component footprint against its datasheet land pattern before release to fabrication</li>
-          <li>Selected and placed supporting components around the RP2040 (crystal oscillator, voltage regulation, and decoupling) by following the microcontroller datasheet and reference design</li>
-        </ul>
-
-        <a href="#" target="_blank" rel="noopener" class="project-link">View code on GitHub →</a>
-        <!-- ^ update this link once you have the repo URL -->
-
-        <div class="gallery">
-          <div class="gallery-item" data-full="assets/images/macro-keypad.png">
-            <img src="assets/images/macro-keypad.png" alt="Macro keypad board render">
-            <p class="caption">Board render</p>
+      <a href="projects/foc-actuator.html" class="project-card reveal">
+        <div class="project-card-index">01</div>
+        <div class="project-card-body">
+          <div class="project-card-header">
+            <h3>Field-Oriented Control BLDC Actuator</h3>
+            <span class="status status-progress"><span class="pulse-dot"></span>In Progress</span>
           </div>
-          <div class="gallery-item" data-full="assets/images/keypad-front.jpg">
-            <img src="assets/images/keypad-front.jpg" alt="Assembled keypad, front view">
-            <p class="caption">Assembled — front</p>
+          <p>FOC firmware from scratch on an STM32 — Clarke/Park transforms, a PI controller,
+             encoder calibration, and a real hardware debugging saga.</p>
+          <div class="tag-row">
+            <span class="tag">STM32</span><span class="tag">C</span><span class="tag">Control Theory</span>
           </div>
-          <div class="gallery-item" data-full="assets/images/keypad-back.jpg">
-            <img src="assets/images/keypad-back.jpg" alt="Assembled keypad, back view">
-            <p class="caption">Assembled — back</p>
+          <span class="read-more">Read the full story →</span>
+        </div>
+      </a>
+
+      <a href="projects/macro-keypad.html" class="project-card reveal">
+        <div class="project-card-index">02</div>
+        <div class="project-card-body">
+          <div class="project-card-header">
+            <h3>Custom Mechanical Macro Keypad</h3>
+            <span class="status status-progress"><span class="pulse-dot"></span>Debugging</span>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================= -->
-    <!-- PROJECT: CHIP-8 Emulator -->
-    <!-- ============================================= -->
-    <section class="project reveal" id="chip8">
-      <div class="project-index">03</div>
-      <div class="project-body">
-        <div class="project-header">
-          <h2>CHIP-8 Emulator</h2>
-          <span class="status status-done">Complete</span>
-        </div>
-        <p class="project-summary">
-          A CHIP-8 virtual machine written in C, with SDL2-based graphics and input, running real
-          CHIP-8 ROMs including Pong.
-        </p>
-        <div class="tag-row">
-          <span class="tag">C</span>
-          <span class="tag">SDL2</span>
-          <span class="tag">Emulation</span>
-          <span class="tag">Bitwise Ops</span>
-        </div>
-
-        <button class="details-toggle" data-target="chip8-details">
-          <span class="toggle-label">Show technical details</span>
-          <span class="toggle-icon">＋</span>
-        </button>
-        <ul class="project-details" id="chip8-details">
-          <li>Built a CHIP-8 virtual machine in C with 4KB memory, 16 general-purpose registers, a 16-level call stack, and hardware timers decrementing at 60Hz</li>
-          <li>Implemented a fetch-decode-execute cycle that parses 35 opcodes using bitwise masking to extract 12-bit addresses, 8-bit constants, and 4-bit register indices from big-endian instructions</li>
-          <li>Developed sprite-based graphics rendering with SDL2, supporting XOR drawing mode and pixel collision detection via the VF flag for game mechanics</li>
-          <li>Mapped the 16-key CHIP-8 hex keypad to host keyboard input through SDL2 events to drive interactive gameplay</li>
-          <li>Added memory bounds checking and stack overflow/underflow protection to prevent crashes from invalid ROM instructions, and validated correctness by running Pong and verifying expected gameplay</li>
-        </ul>
-
-        <a href="#" target="_blank" rel="noopener" class="project-link">View code on GitHub →</a>
-        <!-- ^ update this link once you have the repo URL -->
-
-        <div class="gallery">
-          <div class="gallery-placeholder">
-            <span>🎮 Add a screenshot or gameplay clip of Pong running</span>
-            <small>Drop files into <code>assets/images/</code> or <code>assets/videos/</code></small>
+          <p>A 9-key USB macro pad, designed from schematic to fabrication in KiCad around an
+             RP2040, with N-key rollover matrix scanning.</p>
+          <div class="tag-row">
+            <span class="tag">KiCad</span><span class="tag">RP2040</span><span class="tag">PCB Design</span>
           </div>
+          <span class="read-more">Read the full story →</span>
         </div>
-      </div>
-    </section>
+      </a>
+
+      <a href="projects/chip8.html" class="project-card reveal">
+        <div class="project-card-index">03</div>
+        <div class="project-card-body">
+          <div class="project-card-header">
+            <h3>CHIP-8 Emulator</h3>
+            <span class="status status-done">Complete</span>
+          </div>
+          <p>A CHIP-8 virtual machine in C with SDL2 graphics — fetch-decode-execute, sprite
+             rendering, and real ROMs running, including Pong.</p>
+          <div class="tag-row">
+            <span class="tag">C</span><span class="tag">SDL2</span><span class="tag">Emulation</span>
+          </div>
+          <span class="read-more">Read the full story →</span>
+        </div>
+      </a>
+
+    </div>
 
     <!-- ============================================= -->
     <!-- SKILLS -->
@@ -254,10 +152,9 @@
   </main>
 
   <footer class="site-footer">
-    <p>Built by John Pilli · San Bruno, CA</p>
+    <p>John Pilli · San Bruno, CA</p>
   </footer>
 
-  <!-- lightbox -->
   <div class="lightbox" id="lightbox">
     <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
     <img id="lightboxImg" src="" alt="">

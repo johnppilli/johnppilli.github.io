@@ -36,18 +36,6 @@ const navObserver = new IntersectionObserver((entries) => {
 }, { rootMargin: '-40% 0px -50% 0px' });
 sections.forEach((section) => navObserver.observe(section));
 
-// ---------- Expandable project details ----------
-document.querySelectorAll('.details-toggle').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const target = document.getElementById(btn.dataset.target);
-    const isOpen = target.classList.toggle('open');
-    btn.classList.toggle('open', isOpen);
-    btn.querySelector('.toggle-label').textContent = isOpen
-      ? 'Hide technical details'
-      : 'Show technical details';
-  });
-});
-
 // ---------- Lightbox for gallery images ----------
 const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightboxImg');

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHIP-8 Emulator — John Pilli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+
+  <div class="circuit-bg" aria-hidden="true">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+      <path class="trace trace-3" d="M1200,180 L980,180 L980,20 L640,20" />
+      <circle class="node" cx="980" cy="180" r="4" />
+      <circle class="node" cx="640" cy="20" r="4" />
+    </svg>
+  </div>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">JP<span class="cursor">_</span></a>
+      <div class="nav-links">
+        <a href="../index.html#projects">← All Projects</a>
+        <a href="#" target="_blank" rel="noopener" class="nav-cta">Code ↗</a>
+        <!-- ^ update once you have the repo URL -->
+      </div>
+    </div>
+  </nav>
+
+  <header class="article-hero">
+    <div class="article-hero-inner">
+      <p class="hero-eyebrow reveal">// c · sdl2 · emulation</p>
+      <h1 class="article-title reveal" style="--d:1">CHIP-8 Emulator</h1>
+      <div class="article-meta reveal" style="--d:2">
+        <span class="status status-done">Complete</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-text">A virtual machine, built from scratch in C</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="article">
+
+    <section class="article-section reveal">
+      <h2>The idea</h2>
+      <p>
+        CHIP-8 is a simple, well-documented virtual machine originally used to run games on
+        1970s hobbyist computers — which makes it a genuinely good first emulator project: small
+        enough to fully understand end-to-end, but real enough to force you to actually think
+        like the hardware you're simulating. The goal was to build the whole machine in C, from
+        the memory model up, and get real ROMs — including Pong — actually running and playable.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Building the machine</h2>
+      <p>
+        The core VM models CHIP-8's actual hardware: 4KB of memory, 16 general-purpose
+        registers, a 16-level call stack for subroutine calls, and two hardware timers counting
+        down at a fixed 60Hz — all state a real CHIP-8 system would have had.
+      </p>
+      <p>
+        The heart of any emulator is the fetch-decode-execute cycle. Each instruction arrives as
+        a 16-bit, big-endian value, and has to be pulled apart using bitwise masking to extract
+        exactly the right pieces — a 12-bit memory address, an 8-bit constant, or a 4-bit
+        register index, depending on which of the 35 opcodes it actually is. Getting the masking
+        and shifting right for every opcode variant was most of the real work here.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Making it playable</h2>
+      <p>
+        Graphics run through SDL2, rendering CHIP-8's sprite system — including its XOR drawing
+        mode, where drawing a sprite twice in the same spot erases it, and pixel collision
+        detection through the VF flag, which games use directly as their hit-detection mechanic.
+        The 16-key CHIP-8 hex keypad maps onto the host keyboard through SDL2's event system,
+        so input actually feels responsive during gameplay.
+      </p>
+      <p>
+        Since ROMs are untrusted, arbitrary binary data, the interpreter also needed real
+        defensive checks — memory bounds checking and stack overflow/underflow protection — so a
+        malformed or unusual ROM can't crash the interpreter or corrupt its own state.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Where it stands</h2>
+      <p>
+        Complete and verified — Pong runs correctly, with expected paddle movement, ball physics,
+        and collision behavior confirmed through actual gameplay testing, not just "it compiles."
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Gallery</h2>
+      <div class="gallery">
+        <div class="gallery-placeholder">
+          <span>🎮 Add a screenshot or gameplay clip of Pong running</span>
+          <small>Drop files into <code>assets/images/</code> or <code>assets/videos/</code></small>
+        </div>
+      </div>
+    </section>
+
+    <div class="article-footer-nav reveal">
+      <a href="../index.html#projects" class="btn">← Back to all projects</a>
+      <a href="#" target="_blank" rel="noopener" class="btn btn-primary">View code on GitHub</a>
+      <!-- ^ update once you have the repo URL -->
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>John Pilli · San Bruno, CA</p>
+  </footer>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <script src="../script.js"></script>
+</body>
+</html>

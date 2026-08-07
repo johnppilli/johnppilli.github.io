@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Field-Oriented Control BLDC Actuator — John Pilli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+
+  <div class="circuit-bg" aria-hidden="true">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
+      <path class="trace" d="M0,120 L200,120 L200,260 L480,260 L480,60 L760,60 L760,340 L1200,340" />
+      <path class="trace trace-2" d="M0,500 L160,500 L160,620 L420,620 L420,440 L700,440 L700,700 L1200,700" />
+      <circle class="node" cx="200" cy="120" r="4" />
+      <circle class="node" cx="480" cy="260" r="4" />
+      <circle class="node" cx="760" cy="60" r="4" />
+    </svg>
+  </div>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">JP<span class="cursor">_</span></a>
+      <div class="nav-links">
+        <a href="../index.html#projects">← All Projects</a>
+        <a href="https://github.com/johnppilli/foc-actuator" target="_blank" rel="noopener" class="nav-cta">Code ↗</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="article-hero">
+    <div class="article-hero-inner">
+      <p class="hero-eyebrow reveal">// stm32 · c · control theory</p>
+      <h1 class="article-title reveal" style="--d:1">Field-Oriented Control<br>BLDC Actuator</h1>
+      <div class="article-meta reveal" style="--d:2">
+        <span class="status status-progress"><span class="pulse-dot"></span>In Progress — paused for hardware</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-text">The unit cell of a humanoid robot joint</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="article">
+
+    <section class="article-section reveal">
+      <h2>The idea</h2>
+      <p>
+        A servo motor knows how to go to an angle. It doesn't know how to <em>push</em> —
+        soft, hard, springy, or resistant on command. That's the difference between a robot
+        that moves and a robot that can safely touch something. Field-Oriented Control (FOC)
+        is the technique that gets you that: precise control over how much <em>force</em> a
+        brushless motor delivers, not just where it points.
+      </p>
+      <p>
+        This project is a sensored FOC controller built on a bare STM32, targeting a small
+        BLDC gimbal motor as a stand-in for the "unit cell" of a humanoid robot joint —
+        eventually demoed as a programmable haptic knob you can feel push back on command.
+      </p>
+      <p>
+        The rule I set for myself going in: <strong>write the control algorithm myself.</strong>
+        Libraries like SimpleFOC exist and work well, but using one would mean I never actually
+        had to understand <em>why</em> any of it works. Buying the hardware is normal — an STM32
+        dev board, a motor, a magnetic encoder. Writing the math that turns raw sensor data into
+        precise torque is the part that had to be mine.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Learning the physics first</h2>
+      <p>
+        Before writing a line of code, I worked through the fundamentals: why a stator's
+        magnetic "arrow" produces maximum torque when it's held exactly 90° ahead of the
+        rotor's magnets — and almost none when pointed straight at them. That single rule is
+        the entire reason FOC exists: hold that 90° lead, continuously, no matter how fast the
+        rotor is actually spinning.
+      </p>
+      <p>
+        The gotcha that trips almost everyone up first: a motor's rotor doesn't have just one
+        north pole — it has several magnet <em>pairs</em> arranged around the shaft (seven, for
+        this motor). One full mechanical rotation is actually seven electrical cycles from the
+        stator's point of view. Forget to multiply by that pole-pair count, and the motor just
+        buzzes — the stator arrow updates seven times too slowly to ever catch the rotor.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Deriving the math</h2>
+      <p>
+        The core of FOC is a change of reference frame. Three phase currents, each swinging
+        sinusoidally as the motor spins, are almost impossible for a simple controller to hold
+        steady — the target is always moving. The fix is the Park transform: mathematically
+        "hop onto" a viewpoint spinning with the rotor, so those swinging currents freeze into
+        two steady DC values — <code>Id</code> (wasted, non-torque-producing current, held at
+        zero) and <code>Iq</code> (the actual torque knob).
+      </p>
+      <p>
+        I derived each transform from first principles rather than looking up the formulas —
+        the Park and inverse-Park matrices came from reasoning through 2D rotation geometry
+        directly (a stator axis rotated by the rotor's electrical angle is literally
+        <code>(cos θ, sin θ)</code>, and its perpendicular partner falls straight out of that).
+        The Clarke transform's inverse required working through the actual algebra: substitution,
+        clearing a <code>√3</code> denominator, isolating a variable, combining like terms — by
+        hand, checked against known test cases before it ever touched real hardware.
+      </p>
+      <p>
+        The last piece, a PI current controller, needed something I hadn't used before in C:
+        <strong>pointers.</strong> A controller has to remember its running integral term
+        between calls — but a normal function forgets everything the instant it returns, and
+        passing a struct by value just hands the function a disposable copy. The fix is passing
+        the <em>address</em> of one real, persistent struct, so the function can reach back and
+        modify the original directly instead of a copy that vanishes.
+      </p>
+      <blockquote class="pull-quote reveal">
+        Every transform was tested in isolation on my laptop before it ever touched the board —
+        known inputs, hand-calculated expected outputs, round-trip checks (rotate forward, rotate
+        back, confirm you land exactly where you started).
+      </blockquote>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Bringing it to hardware</h2>
+      <p>
+        With the math proven correct on paper, the real board work started: a
+        <strong>B-G431B-ESC1</strong> (STM32G431 + integrated gate driver), a small gimbal
+        motor, and an AS5600 magnetic encoder. First milestone was the simplest possible proof
+        of life — open-loop spin, no feedback at all, just a commanded angle ramped blindly and
+        driven straight into three-phase PWM. It worked. The motor turned.
+      </p>
+      <p>
+        Next came real sensing. I brought up I2C from scratch to read the AS5600's raw angle
+        register, then hit the second classic FOC gotcha: <strong>the encoder's "zero" and the
+        motor's true electrical zero have no relationship to each other.</strong> They're two
+        independently-mounted physical reference points. Fixing that meant an actual
+        calibration step — hold the motor at a known, fixed electrical angle using the open-loop
+        drive, let the rotor physically settle into that position, then read whatever the
+        encoder reports at that exact moment. That single number becomes a permanent offset,
+        subtracted from every future reading for the life of that specific physical assembly.
+      </p>
+      <p>
+        Current sensing came next, and it was a genuinely harder peripheral bring-up than I2C —
+        the board doesn't expose current directly on an ADC pin. It routes each phase's tiny
+        shunt voltage through the STM32G4's <em>internal</em> op-amps (in PGA mode, gain of 16),
+        which then feed an ADC channel entirely inside the chip. Getting the CubeMX
+        configuration right took a real dig through the board's official documentation to
+        confirm exact pin mappings — and one specific gotcha where the ADC's internal channel
+        stayed grayed out until I found the right op-amp mode ("internally connected," not just
+        "connected") in a tooltip.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>The hardware debugging saga</h2>
+      <p>
+        This is the part that doesn't show up in a bullet point but is honestly the most real
+        engineering work in this project.
+      </p>
+      <p>
+        Board #1 died first — a torn PCB pad while soldering the encoder's I2C wires, an early
+        soldering-technique problem, not a design flaw. That one meant a full board replacement
+        and, more usefully, forced me to actually get good at fine soldering: flux first, heat
+        the pad (not the wire), let it wick in, anchor every wire for strain relief. That
+        technique held up for everything after.
+      </p>
+      <p>
+        Board #2 got further — encoder working, current sensing bringing up real readings off
+        real hardware — before a different failure: the motor's phase wires briefly touched
+        each other during handling, more than once, tripping the power supply into current-limit
+        mode each time. Eventually the board started buzzing erratically and drawing current
+        with zero actual motor output. I diagnosed it the way you'd diagnose any hardware fault
+        systematically: isolated the encoder wiring first (clean), then checked every pair of
+        phase outputs for unwanted continuity (found it — all three phases shorted to each
+        other), then checked whether that short reached ground or the supply rail (it didn't —
+        isolated specifically phase-to-phase), then re-did the external wiring entirely to rule
+        out a bad joint (short persisted). That combination of results pointed at something
+        external tools couldn't fix: internal damage inside the driver chip's switching
+        transistors, most likely from the repeated short-circuit stress.
+      </p>
+      <blockquote class="pull-quote reveal">
+        Two boards down isn't a skill problem — the first failure was a soldering-technique gap
+        that's since closed for good; the second is a wire-handling lesson (heat-shrink every
+        phase connection before power, always) that makes a third attempt meaningfully lower-risk,
+        not a repeat of the same mistake.
+      </blockquote>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Where it stands</h2>
+      <p>
+        The project is honestly paused right now, waiting on a replacement board. But nothing
+        about that pause touches the actual hard work: every transform, the PI controller, the
+        encoder calibration logic, and the current-sensing bring-up code are all done, tested,
+        and sitting in the repo — ready to reflash onto new hardware with essentially zero
+        rework. What's left is finishing current-sensing verification under real load, wiring
+        the math into a proper timer-interrupt-driven control loop (replacing the current
+        polling-based test code), and then closing the loop for real torque control.
+      </p>
+      <p>
+        The impedance-control demo — programmable stiffness and damping, the actual haptic-knob
+        payoff — is the stretch goal once torque control is solid.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Gallery</h2>
+      <div class="gallery">
+        <!--
+          Add a photo:
+            <div class="gallery-item" data-full="../assets/images/YOUR-PHOTO.jpg">
+              <img src="../assets/images/YOUR-PHOTO.jpg" alt="describe what's shown">
+              <p class="caption">Short caption / date</p>
+            </div>
+
+          Add a local video:
+            <div class="gallery-item gallery-video">
+              <video controls src="../assets/videos/YOUR-VIDEO.mp4"></video>
+              <p class="caption">Short caption / date</p>
+            </div>
+        -->
+        <div class="gallery-placeholder">
+          <span>📷 Photos/video coming as the build progresses</span>
+          <small>Drop files into <code>assets/images/</code> or <code>assets/videos/</code></small>
+        </div>
+      </div>
+    </section>
+
+    <div class="article-footer-nav reveal">
+      <a href="../index.html#projects" class="btn">← Back to all projects</a>
+      <a href="https://github.com/johnppilli/foc-actuator" target="_blank" rel="noopener" class="btn btn-primary">View code on GitHub</a>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>John Pilli · San Bruno, CA</p>
+  </footer>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <script src="../script.js"></script>
+</body>
+</html>
