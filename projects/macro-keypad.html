@@ -42,8 +42,8 @@
       <h2>The idea</h2>
       <p>
         A 3×3 mechanical macro keypad, designed entirely from scratch — schematic, PCB layout,
-        and fabrication — rather than starting from a reference board. The goal wasn't just "a
-        keypad that works," but a real end-to-end PCB design exercise: component selection,
+        and fabrication — instead of starting from a reference board. I wanted a real
+        end-to-end PCB design exercise, not just "a keypad that works": component selection,
         schematic capture, layout, design-rule verification, and getting real boards back from
         a fab house.
       </p>
@@ -52,19 +52,19 @@
     <section class="article-section reveal">
       <h2>Designing it</h2>
       <p>
-        The board is built around an RP2040 microcontroller, with a USB-C connector handling
-        both power and data. Nine mechanical key switches sit in a 3×3 matrix — and every switch
-        has its own diode, which matters more than it sounds: without per-key diodes, pressing
-        certain combinations of keys simultaneously creates "ghost" presses the controller can't
-        distinguish from real ones. The diodes force current to flow one direction only,
-        enabling full N-key rollover instead.
+        The board is built around an RP2040, with a USB-C connector handling both power and
+        data. Nine mechanical key switches sit in a 3×3 matrix, and every switch has its own
+        diode. That matters more than it sounds — without per-key diodes, pressing certain
+        combinations of keys at once creates "ghost" presses the controller can't tell from
+        real ones. The diodes force current to flow one direction only, which is what enables
+        full N-key rollover.
       </p>
       <p>
-        Around the RP2040 itself: a crystal oscillator and decoupling capacitors on every supply
-        pin (placed and chosen by following the microcontroller's own datasheet and reference
-        design, not guessing), plus USBLC6 ESD protection sitting on the USB data lines to
-        protect against static discharge during real-world use — the kind of detail that's easy
-        to skip and only matters the first time it saves the board.
+        Around the RP2040 itself: a crystal oscillator and decoupling capacitors on every
+        supply pin, placed and chosen by following the microcontroller's own datasheet and
+        reference design, not guessing. Plus USBLC6 ESD protection on the USB data lines to
+        protect against static discharge — easy to skip, and something that only matters the
+        first time it saves the board.
       </p>
     </section>
 
@@ -72,11 +72,11 @@
       <h2>From layout to real boards</h2>
       <p>
         After routing a 2-layer PCB layout and defining the board outline, the design went
-        through KiCad's electrical rules check (ERC) and design rules check (DRC) — catching and
-        resolving unconnected nets and clearance violations before anything was fabricated. Every
-        component footprint was checked against its actual datasheet land pattern, not just
-        trusted blindly from a library. Gerber and drill files went out to JLCPCB, and real
-        assembled boards came back.
+        through KiCad's electrical rules check (ERC) and design rules check (DRC), catching
+        and resolving unconnected nets and clearance violations before anything was
+        fabricated. Every component footprint got checked against its actual datasheet land
+        pattern, not just trusted blindly from a library. Gerber and drill files went out to
+        JLCPCB, and real assembled boards came back.
       </p>
     </section>
 
@@ -85,21 +85,19 @@
       <p>
         This board is actually my second attempt. The first one had a problem I never fully
         pinned down — the power rails kept shorting, and even removing components one at a
-        time to isolate it didn't reveal a clear cause. It might have been a solder bridge
-        somewhere on the RP2040 itself, or something that got damaged during assembly — I
-        never got a conclusive answer. Rather than keep chasing an unclear fault, I started
-        over on a fresh board.
+        time to isolate it didn't turn up a clear cause. Might've been a solder bridge on the
+        RP2040 itself, or something damaged during assembly. Never got a conclusive answer.
+        Rather than keep chasing it, I started over on a fresh board.
       </p>
       <p>
-        Hardware assembly on this one is done — the harder part, soldering and bring-up, is
-        behind me. What's left is firmware debugging to get it fully functional as a real USB
-        HID device.
+        Hardware assembly on this one is done — soldering and bring-up, the harder part, is
+        behind me. What's left is firmware debugging to get it fully working as a real USB HID
+        device.
       </p>
       <p>
-        One tricky spot along the way: clearing solder bridges off the USB-C connector's
-        VBUS and GND pads. They sat close enough together that removing the excess solder
-        without lifting a pad took several careful passes with solder wick, rather than
-        one clean pull.
+        One tricky spot along the way: clearing solder bridges off the USB-C connector's VBUS
+        and GND pads. They sat close enough together that pulling the excess solder without
+        lifting a pad took several careful passes with solder wick instead of one clean pull.
       </p>
     </section>
 

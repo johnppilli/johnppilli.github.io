@@ -41,76 +41,72 @@
     <section class="article-section reveal">
       <h2>The idea</h2>
       <p>
-        A servo motor knows how to go to an angle. It doesn't know how to <em>push</em> —
-        soft, hard, springy, or resistant on command. That's the difference between a robot
-        that moves and a robot that can safely touch something. Field-Oriented Control (FOC)
-        is the technique that gets you that: precise control over how much <em>force</em> a
-        brushless motor delivers, not just where it points.
+        A servo can hold an angle. It has no idea how to push back with a specific amount of
+        force — soft, hard, springy, whatever you tell it. That's the gap between a robot that
+        just moves and one that can actually touch something safely. Field-Oriented Control
+        (FOC) is how you close that gap: it lets you control how much torque a brushless motor
+        puts out, not just where it points.
       </p>
       <p>
-        This project is a sensored FOC controller built on a bare STM32, targeting a small
-        BLDC gimbal motor as a stand-in for the "unit cell" of a humanoid robot joint —
-        eventually demoed as a programmable haptic knob you can feel push back on command.
+        This project is a sensored FOC controller running on a bare STM32, driving a small BLDC
+        gimbal motor. The long-term idea is a "unit cell" for a humanoid robot joint —
+        eventually a programmable haptic knob you can actually feel push back on command.
       </p>
       <p>
-        The rule I set for myself going in: <strong>write the control algorithm myself.</strong>
-        Libraries like SimpleFOC exist and work well, but using one would mean I never actually
-        had to understand <em>why</em> any of it works. Buying the hardware is normal — an STM32
-        dev board, a motor, a magnetic encoder. Writing the math that turns raw sensor data into
-        precise torque is the part that had to be mine.
+        Going in, I set one rule: write the control algorithm myself. SimpleFOC exists and
+        works fine, but using it would mean skipping the part where I actually understand why
+        any of this works. Buying an STM32 board, a motor, a magnetic encoder — that's normal.
+        Writing the math that turns raw sensor data into torque had to be mine.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Learning the physics first</h2>
       <p>
-        Before writing a line of code, I worked through the fundamentals: why a stator's
-        magnetic "arrow" produces maximum torque when it's held exactly 90° ahead of the
-        rotor's magnets — and almost none when pointed straight at them. That single rule is
-        the entire reason FOC exists: hold that 90° lead, continuously, no matter how fast the
-        rotor is actually spinning.
+        Before writing any code, I worked through why a stator's magnetic field produces
+        maximum torque when it's held 90° ahead of the rotor's magnets, and almost none when
+        pointed straight at them. That's the whole reason FOC exists — hold that 90° lead,
+        continuously, no matter how fast the rotor is spinning.
       </p>
       <p>
-        The gotcha that trips almost everyone up first: a motor's rotor doesn't have just one
-        north pole — it has several magnet <em>pairs</em> arranged around the shaft (seven, for
-        this motor). One full mechanical rotation is actually seven electrical cycles from the
-        stator's point of view. Forget to multiply by that pole-pair count, and the motor just
-        buzzes — the stator arrow updates seven times too slowly to ever catch the rotor.
+        The thing that trips people up first: the rotor doesn't have one north pole, it has
+        several magnet pairs arranged around the shaft — seven, for this motor. One mechanical
+        rotation is actually seven electrical cycles from the stator's point of view. Forget to
+        multiply by that pole-pair count and the motor just buzzes — the stator's "arrow"
+        updates seven times too slow to ever catch the rotor.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Deriving the math</h2>
       <p>
-        The core of FOC is a change of reference frame. Three phase currents, each swinging
-        sinusoidally as the motor spins, are almost impossible for a simple controller to hold
-        steady — the target is always moving. The fix is the Park transform: mathematically
-        "hop onto" a viewpoint spinning with the rotor, so those swinging currents freeze into
-        two steady DC values — <code>Id</code> (wasted, non-torque-producing current, held at
-        zero) and <code>Iq</code> (the actual torque knob).
+        The core of FOC is a change of reference frame. Three phase currents swing
+        sinusoidally as the motor spins, which is basically impossible for a simple controller
+        to hold steady since the target keeps moving. The Park transform fixes this:
+        mathematically jump onto a frame spinning with the rotor, and those swinging currents
+        turn into two steady DC values — <code>Id</code> (wasted, non-torque-producing current,
+        held at zero) and <code>Iq</code> (the actual torque knob).
       </p>
       <p>
-        I derived each transform from first principles rather than looking up the formulas —
-        the Park and inverse-Park matrices came from reasoning through 2D rotation geometry
-        directly (a stator axis rotated by the rotor's electrical angle is literally
-        <code>(cos θ, sin θ)</code>, and its perpendicular partner falls straight out of that).
-        The Clarke transform's inverse required working through the actual algebra: substitution,
-        clearing a <code>√3</code> denominator, isolating a variable, combining like terms — by
-        hand, checked against known test cases before it ever touched real hardware.
+        I derived each transform myself instead of looking up the formulas. Park and
+        inverse-Park came straight out of 2D rotation geometry — a stator axis rotated by the
+        electrical angle is literally <code>(cos θ, sin θ)</code>, and the perpendicular
+        partner falls out of that. The Clarke inverse took actual algebra: substitution,
+        clearing a <code>√3</code> denominator, isolating a variable, combining like terms —
+        worked by hand and checked against known test cases before any of it touched the board.
       </p>
       <p>
-        The last piece, a PI current controller, needed something I hadn't used before in C:
-        <strong>pointers.</strong> A controller has to remember its running integral term
-        between calls — but a normal function forgets everything the instant it returns, and
-        passing a struct by value just hands the function a disposable copy. The fix is passing
-        the <em>address</em> of one real, persistent struct, so the function can reach back and
-        modify the original directly instead of a copy that vanishes.
+        The last piece, a PI current controller, needed something I hadn't used in C before:
+        pointers. A controller has to remember its running integral term between calls, but a
+        normal function forgets everything once it returns, and passing a struct by value just
+        hands it a disposable copy. The fix is passing the address of one real struct, so the
+        function can reach back and modify the original instead of a copy that vanishes.
       </p>
-      <blockquote class="pull-quote reveal">
-        Every transform was tested in isolation on my laptop before it ever touched the board —
-        known inputs, hand-calculated expected outputs, round-trip checks (rotate forward, rotate
-        back, confirm you land exactly where you started).
-      </blockquote>
+      <p>
+        Every transform got tested in isolation on my laptop before it ever touched the board —
+        known inputs, hand-calculated outputs, and round-trip checks: rotate forward, rotate
+        back, confirm you land exactly where you started.
+      </p>
     </section>
 
     <section class="article-section reveal">
@@ -124,8 +120,8 @@
       </p>
       <p>
         Next came real sensing. I brought up I2C from scratch to read the AS5600's raw angle
-        register, then hit the second classic FOC gotcha: <strong>the encoder's "zero" and the
-        motor's true electrical zero have no relationship to each other.</strong> They're two
+        register, then hit the second classic FOC gotcha: the encoder's "zero" and the motor's
+        true electrical zero have no relationship to each other. They're two
         independently-mounted physical reference points. Fixing that meant an actual
         calibration step — hold the motor at a known, fixed electrical angle using the open-loop
         drive, let the rotor physically settle into that position, then read whatever the
@@ -135,71 +131,71 @@
       <p>
         Current sensing came next, and it was a genuinely harder peripheral bring-up than I2C —
         the board doesn't expose current directly on an ADC pin. It routes each phase's tiny
-        shunt voltage through the STM32G4's <em>internal</em> op-amps (in PGA mode, gain of 16),
-        which then feed an ADC channel entirely inside the chip. Getting the CubeMX
-        configuration right took a real dig through the board's official documentation to
-        confirm exact pin mappings — and one specific gotcha where the ADC's internal channel
-        stayed grayed out until I found the right op-amp mode ("internally connected," not just
-        "connected") in a tooltip.
+        shunt voltage through the STM32G4's internal op-amps (in PGA mode, gain of 16), which
+        then feed an ADC channel entirely inside the chip. Getting the CubeMX configuration
+        right took a real dig through the board's official documentation to confirm exact pin
+        mappings, plus one specific gotcha where the ADC's internal channel stayed grayed out
+        until I found the right op-amp mode ("internally connected," not just "connected") in a
+        tooltip.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>The hardware debugging saga</h2>
       <p>
-        This is the part that doesn't show up in a bullet point but is honestly the most real
+        This part doesn't show up in a bullet point, but it's honestly the most real
         engineering work in this project.
       </p>
       <p>
         Board #1 died first — a torn PCB pad while soldering the encoder's I2C wires, an early
-        soldering-technique problem, not a design flaw. That one meant a full board replacement
+        soldering-technique problem, not a design flaw. That meant a full board replacement
         and, more usefully, forced me to actually get good at fine soldering: flux first, heat
         the pad (not the wire), let it wick in, anchor every wire for strain relief. That
         technique held up for everything after.
       </p>
       <p>
-        The encoder and motor wires themselves became their own problem along the way. After
-        enough re-soldering attempts, the original wires got too short and too brittle to keep
-        working with safely — so I had to learn proper wire splicing: cut back past the damaged
-        section to solid copper, solder on a fresh length of wire, heat-shrink the joint. A small
-        skill, but a necessary one once the original wire simply wasn't usable anymore.
+        The encoder and motor wires became their own problem along the way. After enough
+        re-soldering attempts, the original wires got too short and too brittle to keep working
+        with safely, so I had to learn proper wire splicing: cut back past the damaged section
+        to solid copper, solder on a fresh length of wire, heat-shrink the joint. A small skill,
+        but a necessary one once the original wire wasn't usable anymore.
       </p>
       <p>
         Board #2 got further — encoder working, current sensing bringing up real readings off
         real hardware — before a different failure: the motor's phase wires briefly touched
         each other during handling, more than once, tripping the power supply into current-limit
         mode each time. Eventually the board started buzzing erratically and drawing current
-        with zero actual motor output. I diagnosed it the way you'd diagnose any hardware fault
-        systematically: isolated the encoder wiring first (clean), then checked every pair of
-        phase outputs for unwanted continuity (found it — all three phases shorted to each
-        other), then checked whether that short reached ground or the supply rail (it didn't —
-        isolated specifically phase-to-phase), then re-did the external wiring entirely to rule
-        out a bad joint (short persisted). That combination of results pointed at something
-        external tools couldn't fix: internal damage inside the driver chip's switching
-        transistors, most likely from the repeated short-circuit stress.
+        with zero actual motor output. I diagnosed it the way you'd diagnose any hardware fault:
+        isolated the encoder wiring first (clean), checked every pair of phase outputs for
+        unwanted continuity (found it — all three phases shorted to each other), checked
+        whether that short reached ground or the supply rail (it didn't, phase-to-phase only),
+        then re-did the external wiring entirely to rule out a bad joint (short persisted). That
+        combination pointed at something external tools couldn't fix: internal damage inside
+        the driver chip's switching transistors, most likely from the repeated short-circuit
+        stress.
       </p>
-      <blockquote class="pull-quote reveal">
-        Two boards down isn't a skill problem — the first failure was a soldering-technique gap
-        that's since closed for good; the second is a wire-handling lesson (heat-shrink every
-        phase connection before power, always) that makes a third attempt meaningfully lower-risk,
-        not a repeat of the same mistake.
-      </blockquote>
+      <p>
+        Two boards down isn't a skill problem. The first failure was a soldering-technique gap
+        that's closed for good now. The second is a wire-handling lesson — heat-shrink every
+        phase connection before power, always — that makes a third attempt meaningfully
+        lower-risk, not a repeat of the same mistake.
+      </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Where it stands</h2>
       <p>
-        The project is honestly paused right now, waiting on a replacement board. But nothing
-        about that pause touches the actual hard work: every transform, the PI controller, the
-        encoder calibration logic, and the current-sensing bring-up code are all done, tested,
-        and sitting in the repo — ready to reflash onto new hardware with essentially zero
-        rework. What's left is finishing current-sensing verification under real load, wiring
-        the math into a proper timer-interrupt-driven control loop (replacing the current
-        polling-based test code), and then closing the loop for real torque control.
+        The project is honestly paused right now, waiting on a replacement board. But that
+        pause doesn't touch the actual hard work — every transform, the PI controller, the
+        encoder calibration logic, and the current-sensing bring-up code are done, tested, and
+        sitting in the repo, ready to reflash onto new hardware with basically zero rework.
+        What's left is finishing current-sensing verification under real load, wiring the math
+        into a proper timer-interrupt-driven control loop instead of the current polling-based
+        test code, and then closing the loop for real torque control.
       </p>
       <p>
-        The impedance-control demo — programmable stiffness and damping, the actual haptic-knob
-        payoff — is the stretch goal once torque control is solid.
+        The stretch goal once torque control is solid: the impedance-control demo, programmable
+        stiffness and damping, the actual haptic-knob payoff.
       </p>
     </section>
 

@@ -42,11 +42,10 @@
       <h2>The idea</h2>
       <p>
         CHIP-8 is a simple, well-documented virtual machine originally used to run games on
-        1970s hobbyist computers — which makes it a genuinely good first emulator project: small
-        enough to fully understand end-to-end, but real enough to force you to actually think
-        like the hardware you're simulating. The goal was to build the whole machine in C, from
-        the memory model up, and get real ROMs — including Pong and Tetris — actually running and
-        playable.
+        1970s hobbyist computers — a genuinely good first emulator project. Small enough to
+        fully understand end-to-end, real enough to make you actually think like the hardware
+        you're simulating. The goal was to build the whole machine in C, from the memory model
+        up, and get real ROMs — including Pong and Tetris — actually running and playable.
       </p>
     </section>
 
@@ -55,13 +54,13 @@
       <p>
         The core VM models CHIP-8's actual hardware: 4KB of memory, 16 general-purpose
         registers, a 16-level call stack for subroutine calls, and two hardware timers counting
-        down at a fixed 60Hz — all state a real CHIP-8 system would have had.
+        down at a fixed 60Hz.
       </p>
       <p>
-        The heart of any emulator is the fetch-decode-execute cycle. Each instruction arrives as
-        a 16-bit, big-endian value, and has to be pulled apart using bitwise masking to extract
-        exactly the right pieces — a 12-bit memory address, an 8-bit constant, or a 4-bit
-        register index, depending on which of the 35 opcodes it actually is. Getting the masking
+        The heart of any emulator is the fetch-decode-execute cycle. Each instruction arrives
+        as a 16-bit, big-endian value that has to be pulled apart with bitwise masking to
+        extract exactly the right pieces — a 12-bit memory address, an 8-bit constant, or a
+        4-bit register index, depending on which of the 35 opcodes it is. Getting the masking
         and shifting right for every opcode variant was most of the real work here.
       </p>
     </section>
@@ -71,24 +70,25 @@
       <p>
         Graphics run through SDL2, rendering CHIP-8's sprite system — including its XOR drawing
         mode, where drawing a sprite twice in the same spot erases it, and pixel collision
-        detection through the VF flag, which games use directly as their hit-detection mechanic.
-        The 16-key CHIP-8 hex keypad maps onto the host keyboard through SDL2's event system,
-        so input actually feels responsive during gameplay.
+        detection through the VF flag, which games use directly as their hit-detection
+        mechanic. The 16-key CHIP-8 hex keypad maps onto the host keyboard through SDL2's event
+        system, so input actually feels responsive during gameplay.
       </p>
       <p>
         Since ROMs are untrusted, arbitrary binary data, the interpreter also needed real
-        defensive checks — memory bounds checking and stack overflow/underflow protection — so a
-        malformed or unusual ROM can't crash the interpreter or corrupt its own state.
+        defensive checks — memory bounds checking and stack overflow/underflow protection — so
+        a malformed or unusual ROM can't crash it or corrupt its own state.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Where it stands</h2>
       <p>
-        Complete and verified — Pong runs correctly, with expected paddle movement, ball physics,
-        and collision behavior confirmed through actual gameplay testing, not just "it compiles."
-        Tetris runs too, exercising piece movement, rotation, and line-clear scoring — a good
-        stress test since it leans on more of the opcode set than Pong does.
+        Complete and verified. Pong runs correctly, with expected paddle movement, ball
+        physics, and collision behavior confirmed through actual gameplay testing, not just
+        "it compiles." Tetris runs too — piece movement, rotation, line-clear scoring — and
+        leans on more of the opcode set than Pong does, so it was a good stress test for the
+        interpreter.
       </p>
     </section>
 

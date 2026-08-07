@@ -41,10 +41,10 @@
       <h2>The idea</h2>
       <p>
         Hardware bugs are expensive in a way software bugs aren't — once a chip design is
-        fabricated, there's no patching it. <strong>Verification</strong> is the practice of
-        proving a hardware design is correct before that happens, and real verification means
-        checking a design against an <em>independent</em> definition of "correct" — not just
-        reading the RTL and trusting it does what it looks like it does.
+        fabricated, there's no patching it. Verification is the practice of proving a hardware
+        design is correct before that happens, and real verification means checking a design
+        against an independent definition of "correct," not just reading the RTL and trusting
+        it does what it looks like it does.
       </p>
       <p>
         This project is a framework that automatically checks SystemVerilog hardware designs
@@ -84,18 +84,14 @@
     <section class="article-section reveal">
       <h2>Beyond just checking the data</h2>
       <p>
-        For the FIFO specifically, matching output <em>values</em> isn't the whole story — a
-        FIFO can return the right data at the wrong <em>time</em> and still be broken. The
-        testbench includes a dedicated latency checker that tracks every value from the cycle
-        it's written to the cycle it's read back out, recording minimum, maximum, and average
-        write-to-read latency, and flagging a violation if anything takes longer than it should.
+        For the FIFO specifically, matching output values isn't enough — it can return the
+        right data at the wrong time and still be broken. The testbench includes a dedicated
+        latency checker that tracks every value from the cycle it's written to the cycle it's
+        read back out, recording minimum, maximum, and average write-to-read latency, and
+        flagging a violation if anything takes longer than it should. A design can be
+        functionally right and still be wrong in time, so timing gets checked as its own
+        property, not folded into "does the data match."
       </p>
-      <blockquote class="pull-quote reveal">
-        Checking that the right data eventually comes out isn't the same as checking that the
-        hardware behaves correctly — a design can be functionally right and still be wrong in
-        time. Catching that class of bug requires verifying timing as a first-class property,
-        not just correctness.
-      </blockquote>
     </section>
 
     <section class="article-section reveal">

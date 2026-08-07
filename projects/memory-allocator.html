@@ -56,17 +56,16 @@
         alongside the data it holds.
       </p>
       <p>
-        Allocation uses a <strong>best-fit</strong> strategy: rather than grabbing the first
-        free block that's big enough (which wastes space), it scans the whole pool and picks
-        the <em>smallest</em> free block that still fits the request. If that block has room
-        left over after the allocation, it gets <strong>split</strong> — the leftover space
-        becomes a new, independent free block instead of being wasted.
+        Allocation uses a best-fit strategy: instead of grabbing the first free block that's
+        big enough, which wastes space, it scans the whole pool and picks the smallest free
+        block that still fits the request. If that block has room left over, it gets split —
+        the leftover space becomes a new, independent free block instead of going to waste.
       </p>
       <p>
-        Freeing does the reverse: mark a block free, then scan for opportunities to
-        <strong>coalesce</strong> — merge it with a neighboring free block into one larger
-        one. Without coalescing, a pool can fragment into lots of small, individually-useless
-        free blocks even when the total free space would easily satisfy a new request.
+        Freeing does the reverse: mark a block free, then scan for a chance to coalesce, i.e.
+        merge it with a neighboring free block into one larger one. Skip that step and a pool
+        fragments into lots of small, individually-useless free blocks even when the total
+        free space would easily cover a new request.
       </p>
     </section>
 
@@ -89,12 +88,12 @@
         confirm the allocator fails cleanly with <code>NULL</code> instead of corrupting memory
         or crashing.
       </p>
-      <blockquote class="pull-quote reveal">
-        Splitting and coalescing are opposites that have to cooperate — split too eagerly and
-        you fragment the pool with tiny blocks; never coalesce and those fragments become
-        permanently wasted space. Getting both right, together, is most of what makes a real
-        allocator different from a naive one.
-      </blockquote>
+      <p>
+        Splitting and coalescing have to work together — split too eagerly and the pool
+        fragments into tiny blocks; skip coalescing and those fragments stay permanently
+        wasted. Getting both right at the same time is most of what separates a real allocator
+        from a naive one.
+      </p>
     </section>
 
     <section class="article-section reveal">
