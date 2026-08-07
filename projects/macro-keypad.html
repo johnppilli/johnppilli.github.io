@@ -86,15 +86,29 @@
         Hardware assembly is done — the harder part, soldering and bring-up, is behind me.
         What's left is firmware debugging to get it fully functional as a real USB HID device.
       </p>
-      <!-- Add specifics here once you're back debugging: what's the actual bug you're chasing?
-           (e.g. "the matrix scan occasionally misses a key" or "USB enumeration issue") —
-           a concrete debugging story here would make this section a lot stronger, same as
-           the FOC page's hardware saga section. -->
+      <p>
+        One tricky spot along the way: clearing solder bridges off the USB-C connector's
+        VBUS and GND pads. They sat close enough together that removing the excess solder
+        without lifting a pad took several careful passes with solder wick, rather than
+        one clean pull.
+      </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Gallery</h2>
       <div class="gallery">
+        <div class="gallery-item" data-full="../assets/images/keypad-nearly-assembled.jpg">
+          <img src="../assets/images/keypad-nearly-assembled.jpg" alt="Board nearly fully assembled, mid-soldering">
+          <p class="caption">Nearly fully assembled</p>
+        </div>
+        <div class="gallery-item" data-full="../assets/images/keypad-usb-connector-rework.jpg">
+          <img src="../assets/images/keypad-usb-connector-rework.jpg" alt="Close-up of USB-C connector during solder bridge rework">
+          <p class="caption">Clearing VBUS/GND solder bridges</p>
+        </div>
+        <div class="gallery-item gallery-video">
+          <video controls muted playsinline src="../assets/videos/keypad-progress.mp4"></video>
+          <p class="caption">Progress clip</p>
+        </div>
         <div class="gallery-item" data-full="../assets/images/macro-keypad.png">
           <img src="../assets/images/macro-keypad.png" alt="Macro keypad board render">
           <p class="caption">Board render</p>
