@@ -2,17 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Desk scene preview (prototype)</title>
+  <title>John Pilli — Interactive Desk</title>
   <style>
-    body { margin: 0; background: #cfd4da; overflow: hidden; }
+    body { margin: 0; background: #cfd4da; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+
     #hint {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      font-family: -apple-system, sans-serif; color: #555; font-size: 14px;
+      color: #555; font-size: 14px;
     }
+
+    #classicLink {
+      position: fixed; top: 20px; left: 20px; z-index: 5;
+      color: #333; text-decoration: none; font-size: 14px;
+      background: rgba(255,255,255,0.6); padding: 6px 14px; border-radius: 999px;
+    }
+    #classicLink:hover { background: rgba(255,255,255,0.9); }
+
+    #startScreen {
+      position: fixed; inset: 0; z-index: 10;
+      background: #16181d;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #e8eaee;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+    }
+    #startScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    #startScreen h1 {
+      font-size: 3rem; margin: 0 0 8px; font-weight: 700; letter-spacing: -0.02em;
+    }
+    #startScreen p {
+      color: #8b93a3; margin: 0 0 36px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+    }
+    #enterBtn {
+      background: none; border: 1px solid #4f8cff; color: #4f8cff;
+      padding: 13px 30px; font-size: 0.95rem; font-family: 'JetBrains Mono', monospace;
+      cursor: pointer; border-radius: 999px; transition: all 0.2s ease;
+    }
+    #enterBtn:hover { background: #4f8cff; color: #16181d; }
   </style>
 </head>
 <body>
-  <div id="hint">Drag to orbit · this is a rough shape-only prototype, not final art</div>
+
+  <div id="startScreen">
+    <h1>John Pilli</h1>
+    <p>// interactive desk — click an item to explore a project</p>
+    <button id="enterBtn">[ enter ]</button>
+  </div>
+
+  <a id="classicLink" href="index.html">← Classic view</a>
+  <div id="hint">Drag to orbit · click an item on the desk to open that project</div>
+
   <script type="importmap">
   { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                  "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
@@ -37,6 +75,8 @@
     controls.enableDamping = true;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 1.2;
+    // stop auto-rotating once the visitor starts interacting, so clicking items is easier
+    renderer.domElement.addEventListener('pointerdown', () => { controls.autoRotate = false; });
 
     // lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -54,10 +94,38 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    const deskMat = new THREE.MeshStandardMaterial({ color: 0x2b2f36 });
+    const deskMat = new THREE.MeshStandardMaterial({ color: 0xc9a876, roughness: 0.75 });
     const legMat = new THREE.MeshStandardMaterial({ color: 0x555b64 });
     const accentMat = new THREE.MeshStandardMaterial({ color: 0x4f8cff });
     const screenMat = new THREE.MeshStandardMaterial({ color: 0x111318 });
+
+    // generate a stylized "code editor" texture for screens (dark bg, colored code-like lines)
+    function makeScreenTexture(seed) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 320;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0d1117';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const colors = ['#4f8cff', '#4caf6e', '#e8eaee', '#ff5b7a', '#f0c9a0'];
+      let y = 22;
+      for (let i = 0; i < 13; i++) {
+        const indent = (seed + i) % 3 === 0 ? 46 : 22;
+        const w = 60 + ((seed * 37 + i * 53) % 280);
+        ctx.fillStyle = colors[(seed + i) % colors.length];
+        ctx.fillRect(indent, y, w, 11);
+        y += 22;
+      }
+      return new THREE.CanvasTexture(canvas);
+    }
+    const monitorTex = makeScreenTexture(1);
+    const monitorScreenMat = new THREE.MeshStandardMaterial({
+      map: monitorTex, emissive: 0xffffff, emissiveMap: monitorTex, emissiveIntensity: 0.5,
+    });
+    const laptopTex = makeScreenTexture(7);
+    const laptopScreenMat = new THREE.MeshStandardMaterial({
+      map: laptopTex, emissive: 0xffffff, emissiveMap: laptopTex, emissiveIntensity: 0.5,
+    });
 
     function box(w, h, d, mat, x, y, z) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
@@ -71,49 +139,113 @@
     scene.add(desk);
 
     // ---- L-shaped desktop: two wings sharing a corner, wrapping around the chair ----
-    // main wing (monitor + laptop) — runs left/right, shortened
     desk.add(box(3.6, 0.15, 1.5, deskMat, -0.4, 1.5, 0.55));
-    // corner wing (supplies) — runs front/back, extends FORWARD to enclose the chair
     desk.add(box(1.4, 0.15, 2.9, deskMat, 2.1, 1.5, 1.25));
 
     // legs
-    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 0.1));   // main wing, back-left
-    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 1.1));   // main wing, front-left
-    desk.add(box(0.12, 1.5, 0.12, legMat, 1.2, 0.75, 1.1));    // inner corner support
-    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 0.0));    // corner wing, near
-    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 2.5));    // corner wing, far
+    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 0.1));
+    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 1.1));
+    desk.add(box(0.12, 1.5, 0.12, legMat, 1.2, 0.75, 1.1));
+    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 0.0));
+    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 2.5));
 
-    // monitor — back of the main wing
-    desk.add(box(1.6, 1.0, 0.08, screenMat, -1.3, 2.35, 0.0));
-    desk.add(box(0.1, 0.4, 0.1, legMat, -1.3, 1.75, 0.0));
-
-    // laptop — front of the main wing, near the inner corner (open, angled)
+    // ---- CLICKABLE: computer (monitor + laptop) → CHIP-8 emulator ----
+    const computerGroup = new THREE.Group();
+    computerGroup.userData.link = 'projects/chip8.html';
+    // tall slim monitor arm/stand, matching the real setup
+    computerGroup.add(box(0.35, 0.03, 0.2, legMat, -1.3, 1.52, 0.0));  // base foot
+    computerGroup.add(box(0.08, 0.75, 0.08, legMat, -1.3, 1.95, 0.0)); // stand pole
+    computerGroup.add(box(1.6, 1.0, 0.08, monitorScreenMat, -1.3, 2.85, 0.0)); // screen
+    // keyboard + mouse, sitting in front of the monitor
+    computerGroup.add(box(0.7, 0.04, 0.25, legMat, -1.3, 1.58, 0.35));
+    const mouse = new THREE.Mesh(new THREE.CapsuleGeometry(0.05, 0.06, 4, 8), legMat);
+    mouse.rotation.z = Math.PI / 2;
+    mouse.position.set(-0.85, 1.6, 0.35);
+    mouse.castShadow = true;
+    computerGroup.add(mouse);
     const laptopBase = box(1.0, 0.06, 0.7, deskMat, 0.1, 1.6, 0.9);
-    desk.add(laptopBase);
-    const laptopScreen = box(1.0, 0.65, 0.05, screenMat, 0.1, 1.9, 0.56);
+    computerGroup.add(laptopBase);
+    const laptopScreen = box(1.0, 0.65, 0.05, laptopScreenMat, 0.1, 1.9, 0.56);
     laptopScreen.rotation.x = -0.3;
-    desk.add(laptopScreen);
+    computerGroup.add(laptopScreen);
+    desk.add(computerGroup);
 
-    // ---- corner wing: PSU, rework station, keypad — evenly spaced, all facing LEFT ----
-    // bench PSU (box body, blue display + two knobs on the LEFT face)
-    desk.add(box(0.5, 0.5, 0.6, legMat, 2.1, 1.85, 0.3));
-    desk.add(box(0.05, 0.15, 0.4, accentMat, 1.82, 1.95, 0.3));
+    // ---- decorative desk details (not clickable) ----
+    const plantPotMat = new THREE.MeshStandardMaterial({ color: 0x6b5a4a });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0x4caf6e });
+
+    // small plant, back-left corner of the main wing
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.09, 0.16, 12), plantPotMat);
+    pot.position.set(-1.9, 1.66, -0.05);
+    pot.castShadow = true;
+    desk.add(pot);
+    for (let i = 0; i < 5; i++) {
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.35, 6), leafMat);
+      const angle = (i / 5) * Math.PI * 2;
+      leaf.position.set(-1.9 + Math.cos(angle) * 0.05, 1.9, -0.05 + Math.sin(angle) * 0.05);
+      leaf.rotation.z = Math.cos(angle) * 0.3;
+      leaf.rotation.x = -Math.sin(angle) * 0.3;
+      leaf.castShadow = true;
+      desk.add(leaf);
+    }
+
+    // boba tea, next to the laptop
+    const bobaCupMat = new THREE.MeshStandardMaterial({ color: 0xf0c9a0, transparent: true, opacity: 0.85 });
+    const bobaCup = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.06, 0.18, 16), bobaCupMat);
+    bobaCup.position.set(0.75, 1.66, 0.55);
+    bobaCup.castShadow = true;
+    desk.add(bobaCup);
+
+    // boba pearls settled at the bottom
+    const pearlMat = new THREE.MeshStandardMaterial({ color: 0x2b1a12 });
+    for (let i = 0; i < 8; i++) {
+      const pearl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), pearlMat);
+      const angle = (i / 8) * Math.PI * 2;
+      const r = 0.025 + (i % 2) * 0.012;
+      pearl.position.set(0.75 + Math.cos(angle) * r, 1.58, 0.55 + Math.sin(angle) * r);
+      desk.add(pearl);
+    }
+
+    // lid
+    const lidMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, 0.015, 16), lidMat);
+    lid.position.set(0.75, 1.755, 0.55);
+    desk.add(lid);
+
+    // wide straw, poking through the lid at an angle
+    const strawMat = new THREE.MeshStandardMaterial({ color: 0xff5b7a });
+    const straw = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.32, 8), strawMat);
+    straw.position.set(0.73, 1.87, 0.52);
+    straw.rotation.z = 0.15;
+    straw.rotation.x = -0.1;
+    straw.castShadow = true;
+    desk.add(straw);
+
+    // teal soldering mat, under the PSU + rework station area
+    const matMat = new THREE.MeshStandardMaterial({ color: 0x1eb8b8, roughness: 0.9 });
+    desk.add(box(1.1, 0.015, 1.9, matMat, 2.1, 1.585, 0.6));
+
+    // ---- CLICKABLE: bench PSU → FOC actuator ----
+    const psuGroup = new THREE.Group();
+    psuGroup.userData.link = 'projects/foc-actuator.html';
+    psuGroup.add(box(0.5, 0.5, 0.6, legMat, 2.1, 1.85, 0.3));
+    psuGroup.add(box(0.05, 0.15, 0.4, accentMat, 1.82, 1.95, 0.3));
     const knob1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 16), legMat);
     knob1.rotation.z = Math.PI / 2;
     knob1.position.set(1.82, 1.78, 0.17);
-    desk.add(knob1);
+    psuGroup.add(knob1);
     const knob2 = knob1.clone();
     knob2.position.set(1.82, 1.78, 0.43);
-    desk.add(knob2);
+    psuGroup.add(knob2);
+    desk.add(psuGroup);
 
-    // combined solder + hot-air rework station — middle of corner wing, also facing left
+    // ---- CLICKABLE: combined solder + hot-air rework station → FOC actuator ----
     const reworkGroup = new THREE.Group();
+    reworkGroup.userData.link = 'projects/foc-actuator.html';
     reworkGroup.position.set(2.1, 0, 1.25);
     desk.add(reworkGroup);
 
-    // control unit body (houses both tools' controls)
     reworkGroup.add(box(0.5, 0.4, 0.7, legMat, 0, 1.75, 0));
-    // display + two knobs on the LEFT face
     reworkGroup.add(box(0.05, 0.12, 0.4, accentMat, -0.28, 1.82, 0));
     const rKnob1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 16), legMat);
     rKnob1.rotation.z = Math.PI / 2;
@@ -123,7 +255,6 @@
     rKnob2.position.set(-0.28, 1.78, 0.13);
     reworkGroup.add(rKnob2);
 
-    // iron holder — mounted at the near (chair-side) end, tools reaching out to the left
     const standCoil = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.014, 8, 16), legMat);
     standCoil.position.set(-0.3, 1.75, -0.25);
     standCoil.rotation.x = Math.PI / 2;
@@ -133,10 +264,8 @@
     ironRod.rotation.z = 0.6;
     ironRod.castShadow = true;
     reworkGroup.add(ironRod);
-    // small sponge/tip-cleaner holder right next to the iron
     reworkGroup.add(box(0.14, 0.05, 0.14, screenMat, -0.28, 1.58, -0.25));
 
-    // hot air gun holder — mounted at the far end of the same unit
     const gunPole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.28, 8), legMat);
     gunPole.position.set(-0.28, 1.9, 0.25);
     reworkGroup.add(gunPole);
@@ -151,30 +280,62 @@
     gunNozzle.castShadow = true;
     reworkGroup.add(gunNozzle);
 
-    // "macro keypad" stand-in — small, shaped like an actual 3x3 grid of keys
+    // ---- CLICKABLE: macro keypad (3x3 grid) → Macro keypad project ----
+    const keypadGroup = new THREE.Group();
+    keypadGroup.userData.link = 'projects/macro-keypad.html';
     const keypadX = 2.1, keypadZ = 2.15;
-    desk.add(box(0.5, 0.04, 0.5, screenMat, keypadX, 1.58, keypadZ)); // base plate
+    keypadGroup.add(box(0.5, 0.04, 0.5, screenMat, keypadX, 1.58, keypadZ));
     const keyOffsets = [-0.15, 0, 0.15];
     keyOffsets.forEach((ox) => {
       keyOffsets.forEach((oz) => {
-        desk.add(box(0.12, 0.06, 0.12, accentMat, keypadX + ox, 1.63, keypadZ + oz));
+        keypadGroup.add(box(0.12, 0.06, 0.12, accentMat, keypadX + ox, 1.63, keypadZ + oz));
       });
     });
+    desk.add(keypadGroup);
 
-    // chair (very rough: seat + back + legs) — nestled in the inner corner, enclosed by both wings
+    // chair — nestled in the inner corner, enclosed by both wings
     const chair = new THREE.Group();
     chair.position.set(0.6, 0, 2.3);
     const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.15, 24), legMat);
     seat.position.y = 1.0;
     seat.castShadow = true;
     chair.add(seat);
-    // backrest on the FAR side (away from desk), so the seated person faces the desk
     const back = box(1.1, 1.1, 0.12, legMat, 0, 1.9, 0.6);
     chair.add(back);
     const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), legMat);
     pole.position.y = 0.5;
     chair.add(pole);
     scene.add(chair);
+
+    // ---- Click / hover interaction ----
+    const interactiveGroups = [computerGroup, psuGroup, reworkGroup, keypadGroup];
+    const raycaster = new THREE.Raycaster();
+    const mouseNDC = new THREE.Vector2();
+    let hoveredGroup = null;
+
+    function findLinkedAncestor(obj) {
+      let o = obj;
+      while (o) {
+        if (o.userData && o.userData.link) return o;
+        o = o.parent;
+      }
+      return null;
+    }
+
+    renderer.domElement.addEventListener('mousemove', (e) => {
+      mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      raycaster.setFromCamera(mouseNDC, camera);
+      const hits = raycaster.intersectObjects(desk.children, true);
+      hoveredGroup = hits.length > 0 ? findLinkedAncestor(hits[0].object) : null;
+      renderer.domElement.style.cursor = hoveredGroup ? 'pointer' : 'default';
+    });
+
+    renderer.domElement.addEventListener('click', () => {
+      if (hoveredGroup && hoveredGroup.userData.link) {
+        window.location.href = hoveredGroup.userData.link;
+      }
+    });
 
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -185,9 +346,23 @@
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
+
+      // smooth hover scale-up on whichever group is under the cursor
+      interactiveGroups.forEach((g) => {
+        const target = g === hoveredGroup ? 1.06 : 1.0;
+        g.scale.x += (target - g.scale.x) * 0.15;
+        g.scale.y += (target - g.scale.y) * 0.15;
+        g.scale.z += (target - g.scale.z) * 0.15;
+      });
+
       renderer.render(scene, camera);
     }
     animate();
+
+    // ---- Start screen ----
+    document.getElementById('enterBtn').addEventListener('click', () => {
+      document.getElementById('startScreen').classList.add('hidden');
+    });
   </script>
 </body>
 </html>

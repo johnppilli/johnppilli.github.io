@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RTL Verification Framework — John Pilli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+  <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
+  <canvas id="bg3d" class="bg3d-canvas" aria-hidden="true"></canvas>
+
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">JP<span class="cursor">_</span></a>
+      <div class="nav-links">
+        <a href="../index.html#projects">← All Projects</a>
+        <a href="#" target="_blank" rel="noopener" class="nav-cta">Code ↗</a>
+        <!-- ^ update once you have the repo URL -->
+      </div>
+    </div>
+  </nav>
+
+  <header class="article-hero">
+    <div class="article-hero-inner">
+      <p class="hero-eyebrow reveal">// systemverilog · zig · c++ · verilator</p>
+      <h1 class="article-title reveal" style="--d:1">RTL Verification<br>Framework</h1>
+      <div class="article-meta reveal" style="--d:2">
+        <span class="status status-done">Complete</span>
+        <span class="meta-sep">·</span>
+        <span class="meta-text">Checking hardware against an independent reference model</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="article">
+
+    <section class="article-section reveal">
+      <h2>The idea</h2>
+      <p>
+        Hardware bugs are expensive in a way software bugs aren't — once a chip design is
+        fabricated, there's no patching it. <strong>Verification</strong> is the practice of
+        proving a hardware design is correct before that happens, and real verification means
+        checking a design against an <em>independent</em> definition of "correct" — not just
+        reading the RTL and trusting it does what it looks like it does.
+      </p>
+      <p>
+        This project is a framework that automatically checks SystemVerilog hardware designs
+        against independently-written Zig reference models, running both side by side and
+        comparing their behavior cycle by cycle.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>How the pipeline works</h2>
+      <p>
+        Three independent pieces have to agree for a test to pass:
+      </p>
+      <p>
+        <strong>The RTL design</strong> — the actual hardware module, written in SystemVerilog,
+        the same language a real ASIC or FPGA design would use.
+      </p>
+      <p>
+        <strong>The reference model</strong> — a completely separate implementation of the same
+        expected behavior, written in Zig. This is the "golden" model: if the RTL and the
+        reference model ever disagree, the RTL is presumed wrong, not the other way around.
+      </p>
+      <p>
+        <strong>The testbench</strong> — a C++ program that drives both the RTL and the
+        reference model with identical inputs, every clock cycle, and compares their outputs
+        directly. <a href="https://www.veripool.org/verilator/" target="_blank" rel="noopener">Verilator</a>
+        compiles the SystemVerilog into C++ so it can run in the same process as the Zig model,
+        linked together through a small C-compatible interface (<code>*_init()</code>,
+        <code>*_tick()</code>, <code>*_set_*()</code>, <code>*_get_*()</code>).
+      </p>
+      <p>
+        Two modules are verified this way so far: an 8-bit counter with synchronous enable and
+        async reset, and a parameterized synchronous FIFO with full/empty status flags.
+      </p>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Beyond just checking the data</h2>
+      <p>
+        For the FIFO specifically, matching output <em>values</em> isn't the whole story — a
+        FIFO can return the right data at the wrong <em>time</em> and still be broken. The
+        testbench includes a dedicated latency checker that tracks every value from the cycle
+        it's written to the cycle it's read back out, recording minimum, maximum, and average
+        write-to-read latency, and flagging a violation if anything takes longer than it should.
+      </p>
+      <blockquote class="pull-quote reveal">
+        Checking that the right data eventually comes out isn't the same as checking that the
+        hardware behaves correctly — a design can be functionally right and still be wrong in
+        time. Catching that class of bug requires verifying timing as a first-class property,
+        not just correctness.
+      </blockquote>
+    </section>
+
+    <section class="article-section reveal">
+      <h2>Gallery</h2>
+      <div class="gallery">
+        <div class="gallery-placeholder">
+          <span>⚙️ Add a terminal screenshot of a passing verification run here</span>
+          <small>Drop files into <code>assets/images/</code> or <code>assets/videos/</code></small>
+        </div>
+      </div>
+    </section>
+
+    <div class="article-footer-nav reveal">
+      <a href="../index.html#projects" class="btn">← Back to all projects</a>
+      <a href="#" target="_blank" rel="noopener" class="btn btn-primary">View code on GitHub</a>
+      <!-- ^ update once you have the repo URL -->
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>John Pilli · San Bruno, CA</p>
+  </footer>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
+
+  <script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="../bg3d.js"></script>
+  <script src="../script.js"></script>
+</body>
+</html>
