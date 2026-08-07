@@ -43,41 +43,13 @@ body {
   transition: width 0.08s linear;
 }
 
-/* ================= Circuit background ================= */
-.circuit-bg {
+/* ================= 3D background (Three.js canvas) ================= */
+.bg3d-canvas {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.45;
-}
-.circuit-bg svg { width: 100%; height: 100%; }
-.trace {
-  fill: none;
-  stroke: var(--accent-2);
-  stroke-width: 1.6;
-  stroke-dasharray: 6 4000;
-  opacity: 0.55;
-  animation: dash 14s linear infinite;
-}
-.trace-2 { stroke: var(--accent); animation-duration: 18s; animation-delay: -4s; }
-.trace-3 { stroke: var(--accent-2); animation-duration: 10s; animation-delay: -7s; opacity: 0.4; }
-.node {
-  fill: var(--accent);
   opacity: 0.6;
-  animation: blink 3s ease-in-out infinite;
-}
-.node:nth-child(4) { animation-delay: 0.5s; }
-.node:nth-child(5) { animation-delay: 1s; }
-.node:nth-child(6) { animation-delay: 1.5s; }
-.node:nth-child(7) { animation-delay: 2s; }
-
-@keyframes dash {
-  to { stroke-dashoffset: -4000; }
-}
-@keyframes blink {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.9; }
 }
 
 /* ================= Nav ================= */

@@ -12,15 +12,7 @@
 
   <div class="scroll-progress"><div class="scroll-progress-bar" id="scrollBar"></div></div>
 
-  <div class="circuit-bg" aria-hidden="true">
-    <svg viewBox="0 0 1200 800" preserveAspectRatio="none">
-      <path class="trace" d="M0,120 L200,120 L200,260 L480,260 L480,60 L760,60 L760,340 L1200,340" />
-      <path class="trace trace-2" d="M0,500 L160,500 L160,620 L420,620 L420,440 L700,440 L700,700 L1200,700" />
-      <circle class="node" cx="200" cy="120" r="4" />
-      <circle class="node" cx="480" cy="260" r="4" />
-      <circle class="node" cx="760" cy="60" r="4" />
-    </svg>
-  </div>
+  <canvas id="bg3d" class="bg3d-canvas" aria-hidden="true"></canvas>
 
   <nav class="site-nav">
     <div class="nav-inner">
@@ -243,6 +235,10 @@
     <img id="lightboxImg" src="" alt="">
   </div>
 
+  <script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+  </script>
+  <script type="module" src="../bg3d.js"></script>
   <script src="../script.js"></script>
 </body>
 </html>

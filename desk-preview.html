@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Desk scene preview (prototype)</title>
+  <style>
+    body { margin: 0; background: #cfd4da; overflow: hidden; }
+    #hint {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      font-family: -apple-system, sans-serif; color: #555; font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="hint">Drag to orbit · this is a rough shape-only prototype, not final art</div>
+  <script type="importmap">
+  { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                 "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xcfd4da);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(6, 5, 8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.0, 1.6, 0.7);
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.2;
+
+    // lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const key = new THREE.DirectionalLight(0xffffff, 1.1);
+    key.position.set(5, 8, 5);
+    key.castShadow = true;
+    scene.add(key);
+
+    // ground
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(40, 40),
+      new THREE.MeshStandardMaterial({ color: 0xb8bec7 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const deskMat = new THREE.MeshStandardMaterial({ color: 0x2b2f36 });
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x555b64 });
+    const accentMat = new THREE.MeshStandardMaterial({ color: 0x4f8cff });
+    const screenMat = new THREE.MeshStandardMaterial({ color: 0x111318 });
+
+    function box(w, h, d, mat, x, y, z) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+      m.position.set(x, y, z);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      return m;
+    }
+
+    const desk = new THREE.Group();
+    scene.add(desk);
+
+    // ---- L-shaped desktop: two wings sharing a corner, wrapping around the chair ----
+    // main wing (monitor + laptop) — runs left/right, shortened
+    desk.add(box(3.6, 0.15, 1.5, deskMat, -0.4, 1.5, 0.55));
+    // corner wing (supplies) — runs front/back, extends FORWARD to enclose the chair
+    desk.add(box(1.4, 0.15, 2.9, deskMat, 2.1, 1.5, 1.25));
+
+    // legs
+    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 0.1));   // main wing, back-left
+    desk.add(box(0.12, 1.5, 0.12, legMat, -2.0, 0.75, 1.1));   // main wing, front-left
+    desk.add(box(0.12, 1.5, 0.12, legMat, 1.2, 0.75, 1.1));    // inner corner support
+    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 0.0));    // corner wing, near
+    desk.add(box(0.12, 1.5, 0.12, legMat, 2.6, 0.75, 2.5));    // corner wing, far
+
+    // monitor — back of the main wing
+    desk.add(box(1.6, 1.0, 0.08, screenMat, -1.3, 2.35, 0.0));
+    desk.add(box(0.1, 0.4, 0.1, legMat, -1.3, 1.75, 0.0));
+
+    // laptop — front of the main wing, near the inner corner (open, angled)
+    const laptopBase = box(1.0, 0.06, 0.7, deskMat, 0.1, 1.6, 0.9);
+    desk.add(laptopBase);
+    const laptopScreen = box(1.0, 0.65, 0.05, screenMat, 0.1, 1.9, 0.56);
+    laptopScreen.rotation.x = -0.3;
+    desk.add(laptopScreen);
+
+    // ---- corner wing: PSU, rework station, keypad — evenly spaced, all facing LEFT ----
+    // bench PSU (box body, blue display + two knobs on the LEFT face)
+    desk.add(box(0.5, 0.5, 0.6, legMat, 2.1, 1.85, 0.3));
+    desk.add(box(0.05, 0.15, 0.4, accentMat, 1.82, 1.95, 0.3));
+    const knob1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.05, 16), legMat);
+    knob1.rotation.z = Math.PI / 2;
+    knob1.position.set(1.82, 1.78, 0.17);
+    desk.add(knob1);
+    const knob2 = knob1.clone();
+    knob2.position.set(1.82, 1.78, 0.43);
+    desk.add(knob2);
+
+    // combined solder + hot-air rework station — middle of corner wing, also facing left
+    const reworkGroup = new THREE.Group();
+    reworkGroup.position.set(2.1, 0, 1.25);
+    desk.add(reworkGroup);
+
+    // control unit body (houses both tools' controls)
+    reworkGroup.add(box(0.5, 0.4, 0.7, legMat, 0, 1.75, 0));
+    // display + two knobs on the LEFT face
+    reworkGroup.add(box(0.05, 0.12, 0.4, accentMat, -0.28, 1.82, 0));
+    const rKnob1 = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.05, 16), legMat);
+    rKnob1.rotation.z = Math.PI / 2;
+    rKnob1.position.set(-0.28, 1.78, -0.13);
+    reworkGroup.add(rKnob1);
+    const rKnob2 = rKnob1.clone();
+    rKnob2.position.set(-0.28, 1.78, 0.13);
+    reworkGroup.add(rKnob2);
+
+    // iron holder — mounted at the near (chair-side) end, tools reaching out to the left
+    const standCoil = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.014, 8, 16), legMat);
+    standCoil.position.set(-0.3, 1.75, -0.25);
+    standCoil.rotation.x = Math.PI / 2;
+    reworkGroup.add(standCoil);
+    const ironRod = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), accentMat);
+    ironRod.position.set(-0.35, 1.9, -0.25);
+    ironRod.rotation.z = 0.6;
+    ironRod.castShadow = true;
+    reworkGroup.add(ironRod);
+    // small sponge/tip-cleaner holder right next to the iron
+    reworkGroup.add(box(0.14, 0.05, 0.14, screenMat, -0.28, 1.58, -0.25));
+
+    // hot air gun holder — mounted at the far end of the same unit
+    const gunPole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.28, 8), legMat);
+    gunPole.position.set(-0.28, 1.9, 0.25);
+    reworkGroup.add(gunPole);
+    const gunHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.26, 12), screenMat);
+    gunHandle.position.set(-0.28, 2.04, 0.25);
+    gunHandle.rotation.x = 1.1;
+    gunHandle.castShadow = true;
+    reworkGroup.add(gunHandle);
+    const gunNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.03, 0.11, 12), legMat);
+    gunNozzle.position.set(-0.28, 2.16, 0.36);
+    gunNozzle.rotation.x = 1.1;
+    gunNozzle.castShadow = true;
+    reworkGroup.add(gunNozzle);
+
+    // "macro keypad" stand-in — small, shaped like an actual 3x3 grid of keys
+    const keypadX = 2.1, keypadZ = 2.15;
+    desk.add(box(0.5, 0.04, 0.5, screenMat, keypadX, 1.58, keypadZ)); // base plate
+    const keyOffsets = [-0.15, 0, 0.15];
+    keyOffsets.forEach((ox) => {
+      keyOffsets.forEach((oz) => {
+        desk.add(box(0.12, 0.06, 0.12, accentMat, keypadX + ox, 1.63, keypadZ + oz));
+      });
+    });
+
+    // chair (very rough: seat + back + legs) — nestled in the inner corner, enclosed by both wings
+    const chair = new THREE.Group();
+    chair.position.set(0.6, 0, 2.3);
+    const seat = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.15, 24), legMat);
+    seat.position.y = 1.0;
+    seat.castShadow = true;
+    chair.add(seat);
+    // backrest on the FAR side (away from desk), so the seated person faces the desk
+    const back = box(1.1, 1.1, 0.12, legMat, 0, 1.9, 0.6);
+    chair.add(back);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), legMat);
+    pole.position.y = 0.5;
+    chair.add(pole);
+    scene.add(chair);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
