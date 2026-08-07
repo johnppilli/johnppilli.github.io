@@ -45,7 +45,8 @@
         1970s hobbyist computers — which makes it a genuinely good first emulator project: small
         enough to fully understand end-to-end, but real enough to force you to actually think
         like the hardware you're simulating. The goal was to build the whole machine in C, from
-        the memory model up, and get real ROMs — including Pong — actually running and playable.
+        the memory model up, and get real ROMs — including Pong and Tetris — actually running and
+        playable.
       </p>
     </section>
 
@@ -86,6 +87,8 @@
       <p>
         Complete and verified — Pong runs correctly, with expected paddle movement, ball physics,
         and collision behavior confirmed through actual gameplay testing, not just "it compiles."
+        Tetris runs too, exercising piece movement, rotation, and line-clear scoring — a good
+        stress test since it leans on more of the opcode set than Pong does.
       </p>
     </section>
 
@@ -95,6 +98,10 @@
         <div class="gallery-item gallery-video">
           <video controls muted playsinline src="../assets/videos/chip8-pong-demo.mp4"></video>
           <p class="caption">Pong running</p>
+        </div>
+        <div class="gallery-item gallery-video">
+          <video controls muted playsinline src="../assets/videos/chip8-tetris-demo.mp4"></video>
+          <p class="caption">Tetris running</p>
         </div>
       </div>
     </section>
