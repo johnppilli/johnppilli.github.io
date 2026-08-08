@@ -29,7 +29,7 @@
       <p class="hero-eyebrow reveal">// kicad · rp2040 · pcb design</p>
       <h1 class="article-title reveal" style="--d:1">Custom Mechanical<br>Macro Keypad</h1>
       <div class="article-meta reveal" style="--d:2">
-        <span class="status status-progress"><span class="pulse-dot"></span>Debugging</span>
+        <span class="status status-progress"><span class="pulse-dot"></span>Writing firmware</span>
         <span class="meta-sep">·</span>
         <span class="meta-text">Schematic to fabrication in KiCad</span>
       </div>
@@ -84,18 +84,20 @@
       <h2>Where it stands</h2>
       <p>
         This board is actually my second attempt. The first one had a problem I never fully
-        pinned down — the power rails kept shorting, and even removing components one at a
-        time to isolate it didn't turn up a clear cause. Might've been a solder bridge on the
-        RP2040 itself, or something damaged during assembly. Never got a conclusive answer.
-        Rather than keep chasing it, I started over on a fresh board.
+        pinned down — the power rails kept shorting. I went at it with a DMM: continuity checks
+        on capacitors scattered around the board, voltage checks directly on U3, removing
+        components one at a time to try to isolate it. I never got a clear answer — could've
+        been something I placed wrong, or a component that had actually failed. Rather than
+        keep chasing it, I started over on a fresh board.
       </p>
       <p>
         Hardware assembly on this one is done — soldering and bring-up, the harder part, is
         behind me. This was also my second attempt at actually soldering the components onto
         the board, and most of them were tiny 0603-size parts. Doing that hand-soldering while
         still basically learning how to solder in the first place made it slow going, but the
-        board came out clean. What's left is firmware debugging to get it fully working as a
-        real USB HID device.
+        board came out clean and nothing on it is currently broken. What's left is just writing
+        the firmware itself — key-matrix scanning and getting it running as a real USB HID
+        device.
       </p>
       <p>
         One tricky spot along the way: clearing solder bridges off the USB-C connector's VBUS
