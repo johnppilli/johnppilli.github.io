@@ -52,7 +52,10 @@
     <section class="article-section reveal">
       <h2>Designing it</h2>
       <p>
-        The board is built around an RP2040, with a USB-C connector handling both power and
+        The board is built around an RP2040 — cheap, easy to source, native USB support so
+        there's no separate USB-to-serial chip needed, and a PIO peripheral that's genuinely
+        well-suited to matrix scanning, which is a big part of why it's a common pick for
+        keyboard and keypad projects specifically. A USB-C connector handles both power and
         data. Nine mechanical key switches sit in a 3×3 matrix, and every switch has its own
         diode. That matters more than it sounds — without per-key diodes, pressing certain
         combinations of keys at once creates "ghost" presses the controller can't tell from
