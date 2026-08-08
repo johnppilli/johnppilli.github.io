@@ -82,7 +82,8 @@
       <p>
         The core of FOC is a change of reference frame. Three phase currents swing
         sinusoidally as the motor spins, which is basically impossible for a simple controller
-        to hold steady since the target keeps moving. The Park transform fixes this:
+        to hold steady since the target keeps moving. The Clarke transform collapses those
+        three phase currents down into two, then the Park transform fixes the real problem:
         mathematically jump onto a frame spinning with the rotor, and those swinging currents
         turn into two steady DC values — <code>Id</code> (wasted, non-torque-producing current,
         held at zero) and <code>Iq</code> (the actual torque knob).
@@ -185,13 +186,14 @@
     <section class="article-section reveal">
       <h2>Where it stands</h2>
       <p>
-        The project is honestly paused right now, waiting on a replacement board. But that
-        pause doesn't touch the actual hard work — every transform, the PI controller, the
-        encoder calibration logic, and the current-sensing bring-up code are done, tested, and
-        sitting in the repo, ready to reflash onto new hardware with basically zero rework.
-        What's left is finishing current-sensing verification under real load, wiring the math
-        into a proper timer-interrupt-driven control loop instead of the current polling-based
-        test code, and then closing the loop for real torque control.
+        The project is honestly paused right now — I'm waiting on getting a replacement board,
+        since I've already put a decent amount of money into this project and the supplies for
+        it. But that pause doesn't touch the actual hard work — every transform, the PI
+        controller, the encoder calibration logic, and the current-sensing bring-up code are
+        done, tested, and sitting in the repo, ready to reflash onto new hardware with
+        basically zero rework. What's left is finishing current-sensing verification under
+        real load, wiring the math into a proper timer-interrupt-driven control loop instead of
+        the current polling-based test code, and then closing the loop for real torque control.
       </p>
       <p>
         The stretch goal once torque control is solid: the impedance-control demo, programmable
