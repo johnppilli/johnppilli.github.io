@@ -42,70 +42,38 @@
       <h2>The idea</h2>
       <p>
         A 3×3 mechanical macro keypad, designed entirely from scratch — schematic, PCB layout,
-        and fabrication — instead of starting from a reference board. I wanted a real
-        end-to-end PCB design exercise, not just "a keypad that works": component selection,
-        schematic capture, layout, design-rule verification, and getting real boards back from
-        a fab house.
+        and fabrication — instead of starting from a reference board.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Designing it</h2>
       <p>
-        The board is built around an RP2040 — cheap, easy to source, native USB support so
-        there's no separate USB-to-serial chip needed, and a PIO peripheral that's genuinely
-        well-suited to matrix scanning, which is a big part of why it's a common pick for
-        keyboard and keypad projects specifically. A USB-C connector handles both power and
-        data. Nine mechanical key switches sit in a 3×3 matrix, and every switch has its own
-        diode. That matters more than it sounds — without per-key diodes, pressing certain
-        combinations of keys at once creates "ghost" presses the controller can't tell from
-        real ones. The diodes force current to flow one direction only, which is what enables
-        full N-key rollover.
-      </p>
-      <p>
-        Around the RP2040 itself: a crystal oscillator and decoupling capacitors on every
-        supply pin, placed and chosen by following the microcontroller's own datasheet and
-        reference design, not guessing. Plus USBLC6 ESD protection on the USB data lines to
-        protect against static discharge — easy to skip, and something that only matters the
-        first time it saves the board.
+        Built around an RP2040: native USB support, and a PIO peripheral well-suited to matrix
+        scanning. USB-C for power and data. Nine mechanical switches in a 3×3 matrix, each with
+        its own diode to prevent ghosting and enable full N-key rollover. Supporting components
+        (crystal oscillator, decoupling caps, USBLC6 ESD protection) placed by following the
+        RP2040's datasheet and reference design.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>From layout to real boards</h2>
       <p>
-        After routing a 2-layer PCB layout and defining the board outline, the design went
-        through KiCad's electrical rules check (ERC) and design rules check (DRC), catching
-        and resolving unconnected nets and clearance violations before anything was
-        fabricated. Every component footprint got checked against its actual datasheet land
-        pattern, not just trusted blindly from a library. Gerber and drill files went out to
-        JLCPCB, and real assembled boards came back.
+        Routed a 2-layer PCB, ran ERC/DRC to catch unconnected nets and clearance violations,
+        checked every footprint against its datasheet land pattern, then sent Gerber and drill
+        files to JLCPCB for fabrication.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Where it stands</h2>
       <p>
-        This board is actually my second attempt. The first one had a problem I never fully
-        pinned down — the power rails kept shorting. I went at it with a DMM: continuity checks
-        on capacitors scattered around the board, voltage checks directly on U3, removing
-        components one at a time to try to isolate it. I never got a clear answer — could've
-        been something I placed wrong, or a component that had actually failed. Rather than
-        keep chasing it, I started over on a fresh board.
-      </p>
-      <p>
-        Hardware assembly on this one is done — soldering and bring-up, the harder part, is
-        behind me. This was also my second attempt at actually soldering the components onto
-        the board, and most of them were tiny 0603-size parts. Doing that hand-soldering while
-        still basically learning how to solder in the first place made it slow going, but the
-        board came out clean and nothing on it is currently broken. What's left is just writing
-        the firmware itself — key-matrix scanning and getting it running as a real USB HID
-        device.
-      </p>
-      <p>
-        One tricky spot along the way: clearing solder bridges off the USB-C connector's VBUS
-        and GND pads. They sat close enough together that pulling the excess solder without
-        lifting a pad took several careful passes with solder wick instead of one clean pull.
+        Second board attempt — the first had shorting power rails I couldn't fully isolate even
+        with continuity checks and component removal, so I started over on a fresh board.
+        Hand-soldered this one myself (mostly tiny 0603 parts), including clearing a couple of
+        solder bridges off the USB-C connector's VBUS/GND pads. Assembly is done and clean.
+        What's left is the firmware: key-matrix scanning as a real USB HID device.
       </p>
     </section>
 

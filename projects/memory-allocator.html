@@ -40,59 +40,32 @@
     <section class="article-section reveal">
       <h2>The idea</h2>
       <p>
-        <code>malloc()</code> and <code>free()</code> are two of the most-used functions in C,
-        and also two of the easiest to take for granted. This project builds a working
-        allocator from scratch — a fixed memory pool, and hand-written <code>my_malloc()</code>
-        and <code>my_free()</code> functions that manage it — to actually understand what's
-        happening underneath every heap allocation a program makes.
+        A working <code>malloc()</code>/<code>free()</code> implementation from scratch — a
+        fixed memory pool managed by hand-written <code>my_malloc()</code> and
+        <code>my_free()</code> — to understand what's happening underneath every heap
+        allocation.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>How it works</h2>
       <p>
-        The allocator manages a fixed 1024-byte pool, carved into variable-sized blocks. Each
-        block stores a small header — its size and whether it's currently free — directly
-        alongside the data it holds.
-      </p>
-      <p>
-        Allocation uses a best-fit strategy: instead of grabbing the first free block that's
-        big enough, which wastes space, it scans the whole pool and picks the smallest free
-        block that still fits the request. If that block has room left over, it gets split —
-        the leftover space becomes a new, independent free block instead of going to waste.
-      </p>
-      <p>
-        Freeing does the reverse: mark a block free, then scan for a chance to coalesce, i.e.
-        merge it with a neighboring free block into one larger one. Skip that step and a pool
-        fragments into lots of small, individually-useless free blocks even when the total
-        free space would easily cover a new request.
+        Manages a fixed 1024-byte pool carved into variable-sized blocks, each with a small
+        header storing its size and free/used state. Allocation uses best-fit: scan the pool,
+        pick the smallest free block that still fits, and split off any leftover space as a new
+        free block. Freeing marks a block free, then coalesces it with any neighboring free
+        block to fight fragmentation.
       </p>
     </section>
 
     <section class="article-section reveal">
       <h2>Proving it works</h2>
       <p>
-        Three explicit test cases exercise the allocator's actual logic, not just the happy path:
-      </p>
-      <p>
-        <strong>Splitting</strong> — free a 64-byte block, then allocate two separate 16-byte
-        blocks and confirm both carve cleanly out of that one freed region.
-      </p>
-      <p>
-        <strong>Coalescing</strong> — free two neighboring 32-byte blocks, then request a
-        single 60-byte allocation that couldn't fit in either block alone, proving the
-        allocator actually merged them back into one contiguous space first.
-      </p>
-      <p>
-        <strong>Error handling</strong> — request more memory than the entire pool holds, and
-        confirm the allocator fails cleanly with <code>NULL</code> instead of corrupting memory
-        or crashing.
-      </p>
-      <p>
-        Splitting and coalescing have to work together — split too eagerly and the pool
-        fragments into tiny blocks; skip coalescing and those fragments stay permanently
-        wasted. Getting both right at the same time is most of what separates a real allocator
-        from a naive one.
+        Three test cases: <strong>splitting</strong> (free a 64-byte block, allocate two 16-byte
+        blocks, confirm both carve cleanly out of it), <strong>coalescing</strong> (free two
+        neighboring 32-byte blocks, request a 60-byte allocation that only fits if they merged),
+        and <strong>error handling</strong> (request more than the pool holds, confirm a clean
+        <code>NULL</code> instead of a crash).
       </p>
     </section>
 
